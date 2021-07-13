@@ -37,9 +37,9 @@ def say_town(town):
     return new_letter.upper()
 
 
-def town_to_blacklist(blacklist, town):
-    blacklist.append(town)
-    return blacklist
+def town_to_blacklist(black_list, town):
+    black_list.append(town)
+    return black_list
 
 
 def check_if_inlist(list, town):
@@ -64,7 +64,7 @@ def check_for_endgame(city_list, black_list, letter_check):
         exit()
 
 
-def listen_me(black, citylist):
+def listen_me(black_list, city_list):
     # obtain audio from the microphone
     r = sr.Recognizer()
     with sr.Microphone() as source:
@@ -79,11 +79,13 @@ def listen_me(black, citylist):
             print("До встречи!")
             exit()
         my_speech[0].upper()
-        while check_if_inlist(black, my_speech) == 1:
-            check_for_endgame(citylist, black, my_speech[0])
+        while check_if_inlist(black_list, my_speech) == 1:
+            check_for_endgame(city_list, black_list, my_speech[0])
             print(my_speech, "уже называли")
             say_message("уже называли")
-            my_speech = listen_me(black, citylist)
+            print("Нажмите Enter и назовите город")
+            k = input()
+            my_speech = listen_me(black_list, city_list)
             print(my_speech)
         my_speech[0].upper()
         return my_speech
@@ -93,10 +95,16 @@ def listen_me(black, citylist):
         return "ошибка"
 
 
-def town_last_letter(my):
+def town_last_letter(black_list, my):
      o = -1
+     if check_if_inlist(black_list, "йошкар-ола") == 1:
+         if my[o] == "й":
+             o = o - 1
      while my[o] == "ъ" or my[o] == "ё" or my[o] == "ь" or my[o] == "ы":
          o = o - 1
+         if check_if_inlist(black_list, "йошкар-ола") == 1:
+             if my[o] == "й":
+                 o = o - 1
      last_letter = my[o].upper()
      return last_letter
 
@@ -147,28 +155,34 @@ with open('city.csv', 'r', encoding='utf-8') as f:
     p = 0
     while p < len(cities)-1:
         if cities[p].find("Йошкар-Ола") != -1:
-            cities[p] = "Йошкар-ола"
+            cities[p] = "йошкар-ола"
         if cities[p].find("пгт") != -1:
             cities[p] = each[4:]
         p = p + 1
     print(cities)
+    print("Нажмите Enter и назовите город")
+    k = input()
     my_town = listen_me(blacklist, cities)
-    blacklist = town_to_blacklist(blacklist=blacklist, town=my_town)
-    my_letter = town_last_letter(my_town)
+    blacklist = town_to_blacklist(black_list=blacklist, town=my_town)
+    my_letter = town_last_letter(blacklist, my_town)
     town_found = find_town(my_letter, cities, blacklist)
-    blacklist = town_to_blacklist(blacklist=blacklist, town=town_found)
+    blacklist = town_to_blacklist(black_list=blacklist, town=town_found)
     comp_last_letter = say_town(town_found)
     while True:
+        print("Нажмите Enter и назовите город")
+        k = input()
         my_town = listen_me(blacklist, cities)
-        blacklist = town_to_blacklist(blacklist=blacklist, town=my_town)
+        blacklist = town_to_blacklist(black_list=blacklist, town=my_town)
         f = 0
         if my_town[0].upper() == comp_last_letter:
             if check_if_inlist(cities, my_town) == 1:
-                my_letter = town_last_letter(my_town)
+                my_letter = town_last_letter(blacklist, my_town)
                 town_found = find_town(my_letter, cities, blacklist)
+                blacklist = town_to_blacklist(black_list=blacklist, town=town_found)
                 comp_last_letter = say_town(town_found)
             else:
+                print("Нет такого города в России")
                 say_message("Нет такого города в России")
         else:
-            print("Не та буква")
+            print("Не та буква, вам на: ", my_town[0].upper())
             say_message("Не та буква")
