@@ -7,6 +7,15 @@ import speech_recognition as sr
 import os
 
 
+def import_list_from(file):
+    f = open(file, 'r', encoding='utf-8')
+    reader = csv.reader(f)
+    list = []
+    for item in reader:
+        list.append(item[0])
+    return list
+
+
 def find_all_by_first_letter(full_list, f_letter):
     i = 0
     f_letter.upper()
@@ -126,63 +135,53 @@ def find_town(letter, data, blacklist):
     return found
 
 
-with open('city.csv', 'r', encoding='utf-8') as f:
-    reader = csv.reader(f)
-    adr = []
-    cities = []
+def main():
+    cities_list = []
+    print("В какие города сыграем?\n"
+                "1-Русские\n"
+                "2-Мировые")
+    say_message("В какие города сыграем?")
+    u = input()
+    while u != "1" and u != "2":
+        print("Не смешно")
+        say_message("Не смешно")
+        u = input()
+    if u == "1":
+        cities_list = import_list_from('rus_cities.csv')
+    elif u == "2":
+        cities_list = import_list_from('wold_cities.csv')
+    else:
+        print("Ошибка чтения")
+        exit()
     blacklist = []
-    for row in reader:
-        adr.append(row[0])
-    adr.pop(0)
-    for each in adr:
-        if each.find(",") != -1:
-            a = each.find(",")
-            part_city = each[a + 1:]
-            while part_city.find(",") != -1:
-                a = part_city.find(",")
-                part_city = part_city[a+1:]
-            n = part_city.find("г")
-            while part_city[n+1] != " ":
-                n = part_city.find("г", n+1)
-            city = part_city[n+2:]
-            cities.append(city)
-        else:
-            n = each.find("г")
-            while each[n+1] != " ":
-                n = each.find("г", n+1)
-            city = each[n+2:]
-            cities.append(city)
-    p = 0
-    while p < len(cities)-1:
-        if cities[p].find("Йошкар-Ола") != -1:
-            cities[p] = "йошкар-ола"
-        if cities[p].find("пгт") != -1:
-            cities[p] = each[4:]
-        p = p + 1
-    print(cities)
+    #print(cities_list)
     print("Нажмите Enter и назовите город")
     k = input()
-    my_town = listen_me(blacklist, cities)
+    my_town = listen_me(blacklist, cities_list)
     blacklist = town_to_blacklist(black_list=blacklist, town=my_town)
     my_letter = town_last_letter(blacklist, my_town)
-    town_found = find_town(my_letter, cities, blacklist)
+    town_found = find_town(my_letter, cities_list, blacklist)
     blacklist = town_to_blacklist(black_list=blacklist, town=town_found)
     comp_last_letter = say_town(town_found)
     while True:
         print("Нажмите Enter и назовите город")
         k = input()
-        my_town = listen_me(blacklist, cities)
+        my_town = listen_me(blacklist, cities_list)
         blacklist = town_to_blacklist(black_list=blacklist, town=my_town)
         f = 0
         if my_town[0].upper() == comp_last_letter:
-            if check_if_inlist(cities, my_town) == 1:
+            if check_if_inlist(cities_list, my_town) == 1:
                 my_letter = town_last_letter(blacklist, my_town)
-                town_found = find_town(my_letter, cities, blacklist)
+                town_found = find_town(my_letter, cities_list, blacklist)
                 blacklist = town_to_blacklist(black_list=blacklist, town=town_found)
                 comp_last_letter = say_town(town_found)
             else:
                 print("Нет такого города в России")
                 say_message("Нет такого города в России")
         else:
-            print("Не та буква, вам на: ", my_town[0].upper())
+            print("Не та буква, вам на: ", comp_last_letter)
             say_message("Не та буква")
+
+
+if __name__ == "__main__":
+    main()
